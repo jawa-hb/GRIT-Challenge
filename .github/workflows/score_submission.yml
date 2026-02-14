@@ -24,7 +24,7 @@ jobs:
       - name: Checkout private test labels
         uses: actions/checkout@v4
         with:
-          repository: yourusername/competition-secrets  # CHANGE to your private repo
+          repository: jawa-23/GRIT-Secrets  # CHANGE to your private repo
           path: secrets
 
       # 3️⃣ Set up Python
