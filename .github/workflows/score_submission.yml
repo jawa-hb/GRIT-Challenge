@@ -1,1 +1,73 @@
-# GitHub Actions scoring workflow placeholder
+name: Score Submission
+
+# Trigger when a new submission is pushed or manually triggered
+on:
+  push:
+    paths:
+      - 'submissions/**'
+  workflow_dispatch:
+
+# Give the workflow permission to push updates to the repo
+permissions:
+  contents: write
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout the public repo (contains submissions & leaderboard)
+      - name: Checkout public repo
+        uses: actions/checkout@v4
+
+      # 2️⃣ Checkout the private repo containing test.parquet
+      - name: Checkout private test labels
+        uses: actions/checkout@v4
+        with:
+          repository: yourusername/competition-secrets  # CHANGE to your private repo
+          path: secrets
+
+      # 3️⃣ Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.10
+
+      # 4️⃣ Install dependencies
+      - name: Install dependencies
+        run: |
+          pip install pandas pyarrow
+
+      # 5️⃣ Get the latest submission
+      - name: Get latest submission
+        id: submission
+        run: |
+          FILE=$(ls submissions | sort | tail -n 1)
+          echo "SUBMISSION_FILE=submissions/$FILE" >> $GITHUB_ENV
+          echo "SUBMITTER=$FILE" >> $GITHUB_ENV
+
+      # 6️⃣ Run the evaluation script
+      - name: Run evaluation
+        id: eval
+        run: |
+          SCORE=$(python competition/evaluate.py ${{ env.SUBMISSION_FILE }} secrets/test.parquet)
+          echo "SCORE=$SCORE" >> $GITHUB_ENV
+
+      # 7️⃣ Update leaderboard
+      - name: Update leaderboard
+        run: |
+          echo "${SUBMITTER},${SCORE}" >> leaderboard/leaderboard.csv
+
+      # 8️⃣ Commit and push leaderboard updates
+      - name: Commit leaderboard
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add leaderboard/leaderboard.csv
+          git commit -m "Update leaderboard"
+          git push
+
+      # 9️⃣ Clean up test labels (optional)
+      - name: Remove test labels
+        run: rm -f secrets/test.parquet
+
