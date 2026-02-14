@@ -221,7 +221,6 @@ n0002,0.13
 Rules:
 - `id` must match exactly the IDs in `test_nodes.parquet`
 - One row per test node
-- `y_pred` must be a float in [0,1]
 - No missing or duplicate IDs
 
 
