@@ -1,13 +1,11 @@
 name: Score Submission
 
-# Trigger when a new submission is pushed or manually triggered
 on:
   push:
     paths:
       - 'submissions/**'
   workflow_dispatch:
 
-# Give the workflow permission to push updates to the repo
 permissions:
   contents: write
 
@@ -16,15 +14,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout the public repo (contains submissions & leaderboard)
+      # 1️⃣ Checkout the public repo
       - name: Checkout public repo
         uses: actions/checkout@v4
 
-      # 2️⃣ Checkout the private repo containing test.parquet
+      # 2️⃣ Checkout private repo containing test.parquet
       - name: Checkout private test labels
         uses: actions/checkout@v4
         with:
-          repository: jawa-23/GRIT-Secrets  # CHANGE to your private repo
+          repository: yourusername/competition-secrets  # CHANGE to your private repo
           path: secrets
 
       # 3️⃣ Set up Python
@@ -46,19 +44,45 @@ jobs:
           echo "SUBMISSION_FILE=submissions/$FILE" >> $GITHUB_ENV
           echo "SUBMITTER=$FILE" >> $GITHUB_ENV
 
-      # 6️⃣ Run the evaluation script
+      # 6️⃣ Run evaluation script
       - name: Run evaluation
         id: eval
         run: |
           SCORE=$(python competition/evaluate.py ${{ env.SUBMISSION_FILE }} secrets/test.parquet)
           echo "SCORE=$SCORE" >> $GITHUB_ENV
 
-      # 7️⃣ Update leaderboard
+      # 7️⃣ Update leaderboard (first submission only) with competition ranking
       - name: Update leaderboard
         run: |
-          echo "${SUBMITTER},${SCORE}" >> leaderboard/leaderboard.csv
+          python - <<EOF
+import pandas as pd
+import os
 
-      # 8️⃣ Commit and push leaderboard updates
+lb_path = "leaderboard/leaderboard.csv"
+submitter = os.environ["SUBMITTER"]
+score = float(os.environ["SCORE"])
+
+# Load existing leaderboard
+try:
+    df = pd.read_csv(lb_path)
+except FileNotFoundError:
+    df = pd.DataFrame(columns=["name", "score"])
+
+# Only add new submission if participant not already in leaderboard
+if submitter not in df['name'].values:
+    df = pd.concat([df, pd.DataFrame([[submitter, score]], columns=["name","score"])])
+
+# Sort descending by score
+df = df.sort_values("score", ascending=False).reset_index(drop=True)
+
+# Competition ranking: ties share rank, next ranks skipped
+df['rank'] = df['score'].rank(method='max', ascending=False).astype(int)
+
+# Save updated leaderboard
+df.to_csv(lb_path, index=False)
+EOF
+
+      # 8️⃣ Commit and push leaderboard
       - name: Commit leaderboard
         run: |
           git config user.name "github-actions"
@@ -70,4 +94,3 @@ jobs:
       # 9️⃣ Clean up test labels (optional)
       - name: Remove test labels
         run: rm -f secrets/test.parquet
-
