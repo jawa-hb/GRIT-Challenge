@@ -1,14 +1,12 @@
-<img width="32766" height="25" alt="image" src="https://github.com/user-attachments/assets/f9ab6bcd-e149-4a8e-b4df-554055c8aa32" />
+
 # GRIT - Graph-based Rating Inference over Time
-# GRIT  
-## Graph-aware Rating Inference over Time  
 ### Next Contest Rating Prediction
 
 ---
 
 ## 📌 Overview
 
-The **GRIT challenge** evaluates models on the task of predicting the **next contest rating** of competitive programmers.
+The **GRIT challenge** evaluates models on the task of predicting the **next contest rating** of competitive programmers on CodeForces.
 
 Each contest is represented as a graph snapshot where:
 - Nodes correspond to a subset of participating contestants.
@@ -18,9 +16,9 @@ The task is to predict the `nextRating` of each contestant in an **autoregressiv
 
 ---
 
-# 📂 Data
-## Data Description
-The dataset is based on **5000 contestants from Kaggle**. Multiple preprocessing steps were applied to tailor it to the graph structure and the GRIT challenge.
+## 📂 Data
+### Data Description
+The dataset is based on **Codeforces Competitive History from Kaggle**. Multiple preprocessing steps were applied to tailor it to the graph structure and the GRIT challenge.
 
 Each snapshot corresponds to a single contest:
 - Nodes represent a subset of participating contestants.
@@ -28,12 +26,12 @@ Each snapshot corresponds to a single contest:
 
 ---
 
-## 🧩 Node Features
+### 🧩 Node Features
 
 Each node contains the following information:
 - **node_id** – a unique identifier for each node in the dataset
 - **handle** – serves as the contestant ID (strings were converted into integers for privacy)
-- **oldRating** – contestant’s rating when registering for contest *i*  
+- **oldRating** – contestant’s rating when entering contest *i*  
 - **rating** – contestant’s rating after contest *i*  
 - **num_problems_solved** – number of problems solved in contest *i*  
 - **nextRating** – contestant’s rating in the next contest they participate in (*i+1*) → **target to be predicted**  
@@ -42,7 +40,7 @@ Each node contains the following information:
 
 ---
 
-## 🔗 Edge Construction
+### 🔗 Edge Construction
 
 Edges are constructed according to the following criteria:
 Two nodes *(u, v)* are connected if:
@@ -53,7 +51,7 @@ Two nodes *(u, v)* are connected if:
 
 ---
 
-# 🏗 Training Data Structure
+### 🏗 Training Data Structure
 
 Each contest snapshot is represented by:
 - An adjacency matrix  
@@ -61,14 +59,14 @@ Each contest snapshot is represented by:
 
 Inside the `training/` folder:
 
-### `nodes.parquet`
+#### `nodes.parquet`
 
 Used to construct the **feature matrix** for each contest snapshot.
 
 Format:
 node_id, handle, contestId,	oldRating, rating,	problems_solved_num, contestants_count, nextRating
 
-### `edges.parquet`
+#### `edges.parquet`
 
 Used to construct the **adjacency matrix** for each contest snapshot.
 
@@ -77,13 +75,11 @@ contest_id, src, dst
 
 ---
 
-# 🧪 Testing & Evaluation
+## 🧪 Testing & Evaluation
 
 Model evaluation is performed in an **autoregressive manner**.
 
----
-
-## First Appearance in Test Set
+#### First Appearance in Test Set
 
 For contestants appearing for the first time in the testing data:
 
@@ -91,7 +87,7 @@ For contestants appearing for the first time in the testing data:
 
 ---
 
-## Subsequent Appearances
+#### Subsequent Appearances
 
 When a contestant appears again in the testing data, the following features will be set to **-1** (invalid rating):
 
@@ -105,7 +101,7 @@ These values must be filled using your model’s previous predictions:
 
 ---
 
-### 💡 Implementation Hint
+#### 💡 Implementation Hint
 
 You may maintain two dictionaries:
 
@@ -124,16 +120,16 @@ At each contest snapshot in the test set:
 
 ---
 
-# 📊 Evaluation Metric
+### 📊 Evaluation Metric
 
-## Mean Absolute Error (MAE)
+##### Mean Absolute Error (MAE)
 MAE = (1/N) * Σ |y_true − y_pred|
 
 ---
 
-# ⚠️ Why is GRIT Challenging?
+## ⚠️ Why is GRIT Challenging?
 
-## 1️⃣ Missing Values
+### 1️⃣ Missing Values
 
 In a few samples, the raw dataset included rating changes but did not include the number of solved problems.
 
@@ -145,7 +141,7 @@ Models must be resilient to these noisy samples.
 
 ---
 
-## 2️⃣ Inconsistent Participation
+### 2️⃣ Inconsistent Participation
 
 Some contestants participate irregularly.
 
@@ -153,7 +149,7 @@ The model must account for the `participation_gap` when predicting the next rati
 
 ---
 
-## 3️⃣ Registration Rules
+### 3️⃣ Registration Rules
 
 Contestants register for contests before they start.
 
@@ -163,7 +159,7 @@ If a contestant registers but does not solve any problems, their rating may drop
 
 ---
 
-## 4️⃣ Error Accumulation
+### 4️⃣ Error Accumulation
 
 Because evaluation is autoregressive:
 
@@ -173,7 +169,7 @@ Because evaluation is autoregressive:
 
 ---
 
-# 🎯 Goal
+## 🎯 Goal
 
 Develop a model that:
 
@@ -184,21 +180,19 @@ Develop a model that:
 
 ---
 
-## 2. Repository Structure
+## Repository Structure
 
 ```
 .
 ├── data/
 │   ├── public/
-│   │   ├── train_edges.csv
-│   │   ├── train_labels.csv
-│   │   ├── val_edges.csv
-│   │   ├── val_labels.csv
-│   │   ├── test_edges.csv
-│   │   ├── test_nodes.csv
+│   │   ├── train_edges.parquet
+│   │   ├── train_nodes.parquet
+│   │   ├── test_edges.parquet
+│   │   ├── test_nodes.parquet
 │   │   └── sample_submission.csv
 │   └── private/
-│       └── test_labels.csv   # never committed (used only in CI)
+│       └── test_labels.parquet   # never committed (used only in CI)
 ├── competition/
 │   ├── config.yaml
 │   ├── validate_submission.py
@@ -214,10 +208,9 @@ Develop a model that:
     ├── score_submission.yml
     └── publish_leaderboard.yml
 ```
-
 ---
 
-## 3. Submission Format
+## Submission Format
 
 Participants submit a **single CSV file**:
 
@@ -238,7 +231,7 @@ Rules:
 
 ---
 
-## 4. How to Submit
+## How to Submit
 
 1. Fork this repository
 2. Create a new folder:
@@ -264,7 +257,7 @@ The PR will be **automatically scored** and the result posted as a comment.
 
 ---
 
-## 5. Leaderboard
+## Leaderboard
 
 After a PR is merged, the submission is added to:
 - `leaderboard/leaderboard.csv`
@@ -274,7 +267,7 @@ Rankings are sorted by **descending score**.
 
 ---
 
-## 6. Rules
+## Rules
 
 - No external or private data
 - No manual labeling of test data
