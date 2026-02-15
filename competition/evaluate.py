@@ -12,6 +12,8 @@ def main(pred_path, label_path):
         raise ValueError("ID mismatch between predictions and labels")
 
     score = MAE(merged["y_true"], merged["y_pred"])
+    with open("score.txt", "w") as f:
+        f.write(str(score))
     print(f"SCORE={score:.8f}")
 
 if __name__ == "__main__":
