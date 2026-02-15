@@ -142,7 +142,7 @@ rating > oldRating
 
 num_problems_solved = 0
 
-Models must be resilient to these noisy samples.
+Your approach should handle these cases.
 
 ---
 
