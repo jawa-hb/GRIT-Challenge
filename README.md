@@ -157,7 +157,7 @@ The model must account for the `participation_gap` when predicting the next rati
 
 Contestants register for contests before they start.
 As long as a contestant registers, they are considered a participant, and the contest affects their rating.
-If a contestant registers but does not solve any problems, their rating may drop as if they participated and solved none.
+If a contestant registers but does not enter on contest day, their rating may drop as if they participated and solved none.
 
 ---
 
