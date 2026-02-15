@@ -46,37 +46,36 @@ jobs:
       - name: Run scoring
         run: |
           python competition/evaluate.py submissions/* private/test_labels.parquet
-          
 
-      # after scoring
+      # Read score from score.txt
       - name: Read score
         id: get_score
         run: echo "SCORE=$(cat score.txt)" >> $GITHUB_OUTPUT
-      
-      - name: Update leaderboard CSV
-        run: python leaderboard/update_leaderboard_csv.py
-        env:
-          SUBMITTER: ${{ github.event.pull_request.user.login }}
-          SCORE: ${{ steps.get_score.outputs.SCORE }}
-
 
       # Update leaderboard CSV
       - name: Update leaderboard CSV
         run: python leaderboard/update_leaderboard_csv.py
         env:
-          SUBMITTER: ${{ github.event.pull_request.user.login }}
-          SCORE: $(python -c "import competition.evaluate; print(competition.evaluate.last_score)")
+          SCORE: ${{ steps.get_score.outputs.SCORE }}
 
-      # Commit and push leaderboard CSV
+
+     # Copy CSV to docs
+      - name: Copy CSV to docs
+        run: cp leaderboard/leaderboard.csv docs/leaderboard.csv
+
       - name: Commit leaderboard CSV
         env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}   # PAT with push access to repo
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           git config user.name "challenge-bot"
           git config user.email "challenge-bot@users.noreply.github.com"
-          git add leaderboard/leaderboard.csv
-          git commit -m "Update leaderboard"
-          git push https://${BOT_TOKEN}@github.com/jawa-23/GRIT-Challenge.git main
+      
+          git add leaderboard/leaderboard.csv docs/leaderboard.csv
+      
+          if git diff --cached --quiet; then
+            echo "No leaderboard changes to commit."
+          else
+            git commit -m "Update leaderboard"
+            git push https://${BOT_TOKEN}@github.com/jawa-23/GRIT-Challenge.git main
+          fi
 
-      - name: Copy CSV to docs
-        run: cp leaderboard/leaderboard.csv docs/leaderboard.csv
