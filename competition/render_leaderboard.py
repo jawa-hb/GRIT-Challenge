@@ -43,9 +43,10 @@ def main():
     score = (r.get("score") or "").strip()
     ts = (r.get("timestamp_utc") or "").strip()
     notes = (r.get("notes") or "").strip()
+    rank = (r.get("rank") or "").strip()
     # tiny "badge" feel with inline code
     model_disp = f"`{model}`" if model else ""
-    lines.append(f"| {i} | {team} | {model_disp} | {score} | {ts} | {notes} |\n")
+    lines.append(f"| {rank} | {team} | {model_disp} | {score} | {ts} | {notes} |\n")
 
   MD_PATH.write_text("".join(lines), encoding="utf-8")
 
