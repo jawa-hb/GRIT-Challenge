@@ -127,14 +127,16 @@ jobs:
       # Validate predictions file
       - name: Validate submission
         run: |
-          python competition/validate_submission.py \
+          python main_repo/competition/validate_submission.py \
             "main_repo/data/private/predictions_decrypted.csv" \
             "main_repo/data/public/test_nodes.parquet"
           
       # Evaluate submission
       - name: Run evaluation
         run: |
-          python competition/evaluate.py
+          python main_repo/competition/evaluate.py \
+            "main_repo/data/private/predictions_decrypted.csv" \
+            "main_repo/data/private/test_labels.parquet"
 
       # Read score from score.txt
       - name: Read score
