@@ -14,7 +14,9 @@ permissions:
 jobs:
   score_and_update:
     runs-on: ubuntu-latest
-
+    concurrency:
+      group: update-leaderboard
+      cancel-in-progress: false
     steps:
       - name: Checkout main branch (target repo)
         uses: actions/checkout@v4
