@@ -7,9 +7,8 @@ import sys
 
 LEADERBOARD_PATH = Path("leaderboard/leaderboard.csv")
 
-def main(score, submission_path, metadata_path):
+def main(score, metadata_path):
     score = float(score)
-    submission_path = Path(submission_path)
     metadata_path = Path(metadata_path)
 
     if not metadata_path.exists():
@@ -54,6 +53,6 @@ def main(score, submission_path, metadata_path):
 if __name__ == "__main__":
     main(
         score=os.environ["SCORE"],
-        submission_path=sys.argv[1],
-        metadata_path=sys.argv[2]
+        metadata_path=sys.argv[1]
     )
+
